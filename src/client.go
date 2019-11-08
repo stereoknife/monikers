@@ -1,9 +1,8 @@
-package src
+package main
 
 import (
 	"fmt"
 	"github.com/gorilla/websocket"
-	"github.com/snaekomu/monikers"
 	"log"
 	"time"
 )
@@ -25,7 +24,7 @@ func (c *client) Read() {
 	}
 }
 
-func (c *client) Join(ses *main.session) {
+func (c *client) Join(ses *session) {
 	ses.clients = append(ses.clients, c)
 	ses.Broadcast(1, []byte("Client joined session"))
 }
