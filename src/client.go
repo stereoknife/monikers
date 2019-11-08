@@ -1,7 +1,9 @@
-package main
+package src
 
 import (
+	"fmt"
 	"github.com/gorilla/websocket"
+	"github.com/snaekomu/monikers"
 	"log"
 	"time"
 )
@@ -9,6 +11,7 @@ import (
 type client struct {
 	conn   *websocket.Conn
 	readCh chan []byte
+	name   string
 }
 
 func (c *client) Read() {
@@ -22,17 +25,20 @@ func (c *client) Read() {
 	}
 }
 
-func (c *client) Join(ses *session) {
+func (c *client) Join(ses *main.session) {
 	ses.clients = append(ses.clients, c)
 	ses.Broadcast(1, []byte("Client joined session"))
 }
 
-func listen(ch chan []byte, d time.Duration, f func(m []byte)) {
+func (c *client) ListenFor(duration time.Duration, f func([]byte) bool) {
 	for {
 		select {
-		case m := <-ch:
-			f(m)
-		case <-time.After(d):
+		case m := <-c.readCh:
+			if f(m) {
+				return
+			}
+		case <-time.After(duration):
+			fmt.Println("stopped listening")
 			return
 		}
 	}

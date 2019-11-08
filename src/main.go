@@ -1,4 +1,4 @@
-package main
+package src
 
 import (
 	"fmt"
@@ -19,15 +19,28 @@ var sesh = session{
 }
 
 func socketSetup(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		log.Println(err)
+		return
+	}
+
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
+		return
 	}
-	c := client{ws, make(chan []byte)}
+
+	c := client{
+		ws,
+		make(chan []byte),
+		r.FormValue("name"),
+	}
+
 	c.Join(&sesh)
 	go c.Read()
-	sesh.Start()
-	fmt.Println("end of loop")
+	if sesh.status == 0 {
+		sesh.Start()
+	}
 }
 
 func setRoutes(r *mux.Router) {
